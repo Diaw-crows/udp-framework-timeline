@@ -279,10 +279,29 @@ function CurrentDateLine() {
 export function PhaseSection({
   phase,
   onTaskUpdate,
+  onAddTask,
 }: {
   phase: Phase;
   onTaskUpdate?: (updatedTask: TimelineTask) => void;
+  onAddTask?: (phaseName: string, newTask: TimelineTask) => void;
 }) {
+  const [isAddingTask, setIsAddingTask] = useState(false);
+  const [newTaskName, setNewTaskName] = useState("");
+
+  const handleAddTask = () => {
+    if (newTaskName.trim() && onAddTask) {
+      // สร้าง Task ใหม่โดยค่าตั้งต้นความยาวคือ 4 ช่อง (2 เดือน)
+      onAddTask(phase.name, {
+        name: newTaskName.trim(),
+        type: "development", // กำหนด Default ให้เป็น development ไปก่อน
+        startCol: 0,
+        endCol: 3,
+      });
+    }
+    setNewTaskName("");
+    setIsAddingTask(false);
+  };
+
   return (
     <div className="relative mb-2">
       <div
@@ -300,6 +319,53 @@ export function PhaseSection({
         {phase.tasks.map((task) => (
           <TaskBar key={task.name} task={task} onTaskUpdate={onTaskUpdate} />
         ))}
+
+        {/* --- ส่วนสำหรับการ Add Task ใหม่ใน Phase นี้ --- */}
+        <div className="group relative flex items-center gap-3 py-1.5">
+          <div className="w-56 shrink-0 pr-3 text-right flex justify-end">
+            {isAddingTask ? (
+              <input
+                autoFocus
+                className="w-full bg-background border border-border rounded px-2 py-1 text-xs text-right focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                placeholder="Task name..."
+                value={newTaskName}
+                onChange={(e) => setNewTaskName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleAddTask();
+                  if (e.key === "Escape") {
+                    setNewTaskName("");
+                    setIsAddingTask(false);
+                  }
+                }}
+                onBlur={() => {
+                  if (newTaskName.trim()) handleAddTask();
+                  else setIsAddingTask(false);
+                }}
+              />
+            ) : (
+              <button
+                onClick={() => setIsAddingTask(true)}
+                className="inline-flex items-center gap-1 text-xs text-muted-foreground/40 hover:text-foreground transition-colors"
+              >
+                <svg
+                  className="w-3 h-3"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+                Add Task
+              </button>
+            )}
+          </div>
+          <div className="relative h-7 flex-1" />
+        </div>
       </div>
     </div>
   );
@@ -419,6 +485,73 @@ export function SpecialItemsBar({
           <SpecialItemRow key={item.name} item={item} onUpdate={onItemUpdate} />
         ))}
       </div>
+    </div>
+  );
+}
+
+// --- Component ใหม่สำหรับ Add Phase เพิ่มเติม (นำไปวางในไฟล์หน้าหลักต่อท้าย Loop Phase ได้เลย) ---
+export function AddPhaseButton({
+  onAddPhase,
+}: {
+  onAddPhase?: (phaseName: string) => void;
+}) {
+  const [isAdding, setIsAdding] = useState(false);
+  const [phaseName, setPhaseName] = useState("");
+
+  const handleAdd = () => {
+    if (phaseName.trim() && onAddPhase) {
+      onAddPhase(phaseName.trim());
+    }
+    setPhaseName("");
+    setIsAdding(false);
+  };
+
+  return (
+    <div className="relative mb-6 group">
+      {isAdding ? (
+        <div className="mb-1 flex items-center gap-2 border-l-2 border-dashed border-border/50 bg-muted/10 rounded-r-md px-3 py-2">
+          <input
+            autoFocus
+            className="bg-background border border-border rounded px-2 py-1 text-sm font-bold w-48 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+            placeholder="New Phase name..."
+            value={phaseName}
+            onChange={(e) => setPhaseName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleAdd();
+              if (e.key === "Escape") {
+                setPhaseName("");
+                setIsAdding(false);
+              }
+            }}
+            onBlur={() => {
+              if (phaseName.trim()) handleAdd();
+              else setIsAdding(false);
+            }}
+          />
+        </div>
+      ) : (
+        <div
+          onClick={() => setIsAdding(true)}
+          className="mb-1 flex items-center gap-2 border-l-2 border-dashed border-border/30 bg-muted/5 rounded-r-md px-3 py-2 cursor-pointer hover:bg-muted/20 hover:border-border/60 transition-all"
+        >
+          <h3 className="text-sm font-bold tracking-wide text-muted-foreground group-hover:text-foreground flex items-center gap-2">
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            Add Phase
+          </h3>
+        </div>
+      )}
     </div>
   );
 }
