@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   type Phase,
   type TimelineTask,
@@ -10,31 +10,184 @@ import {
   type TaskType,
 } from "@/lib/timeline-data";
 
-function TaskBar({ task }: { task: TimelineTask }) {
+// Custom Hook สำหรับจัดการ Drag & Drop และ Resize
+function useDraggableBar(
+  initialStartCol: number,
+  initialEndCol: number,
+  totalCols: number,
+  onUpdate?: (start: number, end: number) => void
+) {
+  const [startCol, setStartCol] = useState(initialStartCol);
+  const [endCol, setEndCol] = useState(initialEndCol);
+  const [isDragging, setIsDragging] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Sync กับ Props ในกรณีที่ข้อมูลจากภายนอกถูกอัปเดต
+  useEffect(() => {
+    setStartCol(initialStartCol);
+    setEndCol(initialEndCol);
+  }, [initialStartCol, initialEndCol]);
+
+  const handleDragStart = (
+    e: React.MouseEvent,
+    type: "move" | "resize-left" | "resize-right"
+  ) => {
+    if (!containerRef.current) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    const startX = e.clientX;
+    const currentStartCol = startCol;
+    const currentEndCol = endCol;
+    const duration = currentEndCol - currentStartCol;
+    const containerWidth = containerRef.current.getBoundingClientRect().width;
+
+    setIsDragging(true);
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const deltaX = moveEvent.clientX - startX;
+      // แปลงระยะทางพิกเซลเป็นจำนวนช่อง (Column)
+      const colsMoved = Math.round((deltaX / containerWidth) * totalCols);
+
+      let newStartCol = currentStartCol;
+      let newEndCol = currentEndCol;
+
+      if (type === "move") {
+        newStartCol += colsMoved;
+        newEndCol += colsMoved;
+        // ป้องกันไม่ให้ลากหลุดขอบเขต
+        if (newStartCol < 0) {
+          newStartCol = 0;
+          newEndCol = duration;
+        }
+        if (newEndCol >= totalCols) {
+          newEndCol = totalCols - 1;
+          newStartCol = newEndCol - duration;
+        }
+      } else if (type === "resize-left") {
+        newStartCol += colsMoved;
+        if (newStartCol > newEndCol) newStartCol = newEndCol;
+        if (newStartCol < 0) newStartCol = 0;
+      } else if (type === "resize-right") {
+        newEndCol += colsMoved;
+        if (newEndCol < newStartCol) newEndCol = newStartCol;
+        if (newEndCol >= totalCols) newEndCol = totalCols - 1;
+      }
+
+      setStartCol(newStartCol);
+      setEndCol(newEndCol);
+    };
+
+    const handleMouseUp = (upEvent: MouseEvent) => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+      setIsDragging(false);
+
+      const deltaX = upEvent.clientX - startX;
+      const colsMoved = Math.round((deltaX / containerWidth) * totalCols);
+
+      let newStartCol = currentStartCol;
+      let newEndCol = currentEndCol;
+
+      if (type === "move") {
+        newStartCol += colsMoved;
+        newEndCol += colsMoved;
+        if (newStartCol < 0) {
+          newStartCol = 0;
+          newEndCol = duration;
+        }
+        if (newEndCol >= totalCols) {
+          newEndCol = totalCols - 1;
+          newStartCol = newEndCol - duration;
+        }
+      } else if (type === "resize-left") {
+        newStartCol += colsMoved;
+        if (newStartCol > newEndCol) newStartCol = newEndCol;
+        if (newStartCol < 0) newStartCol = 0;
+      } else if (type === "resize-right") {
+        newEndCol += colsMoved;
+        if (newEndCol < newStartCol) newEndCol = newStartCol;
+        if (newEndCol >= totalCols) newEndCol = totalCols - 1;
+      }
+
+      setStartCol(newStartCol);
+      setEndCol(newEndCol);
+
+      // แจ้ง Parent Component เพื่อบันทึกข้อมูลหากมีการเปลี่ยนแปลง
+      if (onUpdate && (newStartCol !== currentStartCol || newEndCol !== currentEndCol)) {
+        onUpdate(newStartCol, newEndCol);
+      }
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+  };
+
+  return { startCol, endCol, isDragging, containerRef, handleDragStart };
+}
+
+function TaskBar({
+  task,
+  onTaskUpdate,
+}: {
+  task: TimelineTask;
+  onTaskUpdate?: (task: TimelineTask) => void;
+}) {
   const [hovered, setHovered] = useState(false);
   const barColors = TASK_TYPE_BAR_COLORS[task.type];
   const totalCols = 24;
-  const left = (task.startCol / totalCols) * 100;
-  const width = ((task.endCol - task.startCol + 1) / totalCols) * 100;
+
+  const { startCol, endCol, isDragging, containerRef, handleDragStart } =
+    useDraggableBar(task.startCol, task.endCol, totalCols, (newStart, newEnd) => {
+      if (onTaskUpdate) {
+        onTaskUpdate({ ...task, startCol: newStart, endCol: newEnd });
+      }
+    });
+
+  const left = (startCol / totalCols) * 100;
+  const width = ((endCol - startCol + 1) / totalCols) * 100;
 
   return (
     <div className="group relative flex items-center gap-3 py-1.5">
       <div className="w-56 shrink-0 truncate pr-3 text-right text-xs text-muted-foreground">
         {task.name}
       </div>
-      <div className="relative h-7 flex-1">
+      <div className="relative h-7 flex-1" ref={containerRef}>
         <div
-          className="absolute top-0.5 h-6 cursor-pointer rounded-md transition-all duration-200"
+          className={`absolute top-0.5 h-6 rounded-md ${
+            isDragging ? "transition-none" : "transition-all duration-200"
+          }`}
           style={{ left: `${left}%`, width: `${width}%` }}
           onMouseEnter={() => setHovered(true)}
           onMouseLeave={() => setHovered(false)}
         >
+          {/* Main Bar (ลากเพื่อ Move) */}
           <div
             className={`h-full w-full rounded-md bg-gradient-to-r ${barColors} ${
-              hovered ? "opacity-100 shadow-lg" : "opacity-80"
-            } transition-all duration-200`}
+              hovered || isDragging
+                ? "opacity-100 shadow-lg cursor-grab active:cursor-grabbing"
+                : "opacity-80 cursor-pointer"
+            }`}
+            onMouseDown={(e) => handleDragStart(e, "move")}
           />
-          {task.note && hovered && (
+
+          {/* Left Handle (ยืดหดด้านซ้าย) */}
+          {(hovered || isDragging) && (
+            <div
+              className="absolute left-0 top-0 bottom-0 w-2.5 cursor-ew-resize rounded-l-md hover:bg-white/30 z-10"
+              onMouseDown={(e) => handleDragStart(e, "resize-left")}
+            />
+          )}
+
+          {/* Right Handle (ยืดหดด้านขวา) */}
+          {(hovered || isDragging) && (
+            <div
+              className="absolute right-0 top-0 bottom-0 w-2.5 cursor-ew-resize rounded-r-md hover:bg-white/30 z-10"
+              onMouseDown={(e) => handleDragStart(e, "resize-right")}
+            />
+          )}
+
+          {task.note && (hovered || isDragging) && (
             <div className="absolute top-8 left-1/2 z-50 -translate-x-1/2 whitespace-nowrap rounded-md border border-border bg-popover px-3 py-1.5 text-xs text-popover-foreground shadow-xl">
               {task.note}
             </div>
@@ -123,7 +276,13 @@ function CurrentDateLine() {
   );
 }
 
-export function PhaseSection({ phase }: { phase: Phase }) {
+export function PhaseSection({
+  phase,
+  onTaskUpdate,
+}: {
+  phase: Phase;
+  onTaskUpdate?: (updatedTask: TimelineTask) => void;
+}) {
   return (
     <div className="relative mb-2">
       <div
@@ -139,7 +298,7 @@ export function PhaseSection({ phase }: { phase: Phase }) {
       <div className="relative">
         <GridLines />
         {phase.tasks.map((task) => (
-          <TaskBar key={task.name} task={task} />
+          <TaskBar key={task.name} task={task} onTaskUpdate={onTaskUpdate} />
         ))}
       </div>
     </div>
@@ -181,10 +340,71 @@ export function Legend() {
   );
 }
 
+// Sub-component สำหรับ Special Item เพื่อให้รองรับ Drag & Drop เช่นกัน
+function SpecialItemRow({
+  item,
+  onUpdate,
+}: {
+  item: { name: string; startCol: number; endCol: number };
+  onUpdate?: (name: string, startCol: number, endCol: number) => void;
+}) {
+  const totalCols = 24;
+  const { startCol, endCol, isDragging, containerRef, handleDragStart } =
+    useDraggableBar(item.startCol, item.endCol, totalCols, (newStart, newEnd) => {
+      if (onUpdate) onUpdate(item.name, newStart, newEnd);
+    });
+
+  const left = (startCol / totalCols) * 100;
+  const width = ((endCol - startCol + 1) / totalCols) * 100;
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <div className="group relative flex items-center gap-3 py-1.5">
+      <div className="w-56 shrink-0 truncate pr-3 text-right text-xs text-muted-foreground">
+        {item.name}
+      </div>
+      <div className="relative h-7 flex-1" ref={containerRef}>
+        <div
+          className={`absolute top-0.5 h-6 rounded-md ${
+            isDragging ? "transition-none" : "transition-all duration-200"
+          }`}
+          style={{ left: `${left}%`, width: `${width}%` }}
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+        >
+          <div
+            className={`h-full w-full rounded-md border border-dashed border-rose-500/40 bg-rose-500/10 ${
+              hovered || isDragging
+                ? "cursor-grab active:cursor-grabbing bg-rose-500/20"
+                : "cursor-pointer"
+            }`}
+            onMouseDown={(e) => handleDragStart(e, "move")}
+          />
+
+          {(hovered || isDragging) && (
+            <>
+              <div
+                className="absolute left-0 top-0 bottom-0 w-2.5 cursor-ew-resize rounded-l-md hover:bg-rose-500/20 z-10"
+                onMouseDown={(e) => handleDragStart(e, "resize-left")}
+              />
+              <div
+                className="absolute right-0 top-0 bottom-0 w-2.5 cursor-ew-resize rounded-r-md hover:bg-rose-500/20 z-10"
+                onMouseDown={(e) => handleDragStart(e, "resize-right")}
+              />
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function SpecialItemsBar({
   items,
+  onItemUpdate,
 }: {
   items: { name: string; startCol: number; endCol: number }[];
+  onItemUpdate?: (name: string, startCol: number, endCol: number) => void;
 }) {
   return (
     <div className="relative mt-1 mb-2">
@@ -195,29 +415,9 @@ export function SpecialItemsBar({
       </div>
       <div className="relative">
         <GridLines />
-        {items.map((item) => {
-          const totalCols = 24;
-          const left = (item.startCol / totalCols) * 100;
-          const width = ((item.endCol - item.startCol + 1) / totalCols) * 100;
-          return (
-            <div
-              key={item.name}
-              className="group relative flex items-center gap-3 py-1.5"
-            >
-              <div className="w-56 shrink-0 truncate pr-3 text-right text-xs text-muted-foreground">
-                {item.name}
-              </div>
-              <div className="relative h-7 flex-1">
-                <div
-                  className="absolute top-0.5 h-6 rounded-md"
-                  style={{ left: `${left}%`, width: `${width}%` }}
-                >
-                  <div className="h-full w-full rounded-md border border-dashed border-rose-500/40 bg-rose-500/10" />
-                </div>
-              </div>
-            </div>
-          );
-        })}
+        {items.map((item) => (
+          <SpecialItemRow key={item.name} item={item} onUpdate={onItemUpdate} />
+        ))}
       </div>
     </div>
   );
