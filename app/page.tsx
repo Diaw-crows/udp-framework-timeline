@@ -6,8 +6,9 @@ import {
   TimelineHeader,
   Legend,
   SpecialItemsBar,
+  GanttLayout,
+  TodayLine,
 } from "@/components/gantt-chart";
-import { TodayMarker } from "@/components/today-marker";
 import { CalendarRange } from "lucide-react";
 
 export default function DashboardPage() {
@@ -66,29 +67,25 @@ export default function DashboardPage() {
             <Legend />
           </div>
 
-          <div className="overflow-x-auto">
-            <div className="relative min-w-[1000px]">
-              {/* Month Header */}
-              <div className="sticky top-0 z-20 rounded-t-lg border-b border-border bg-card pb-1">
-                <TimelineHeader />
-              </div>
+          {/* ใช้ GanttLayout แทน overflow-x-auto แบบเดิม เพื่อให้ขอบเขต Sticky ล็อกได้ทั้งแกน X และ Y */}
+          <GanttLayout>
+            <TimelineHeader />
 
-              {/* Chart Body */}
-              <div className="relative">
-                <TodayMarker />
+            {/* Chart Body */}
+            <div className="relative">
+              <TodayLine />
 
-                {/* Phase Sections */}
-                <div className="py-2">
-                  {phases.map((phase) => (
-                    <PhaseSection key={phase.name} phase={phase} />
-                  ))}
+              {/* Phase Sections */}
+              <div className="py-2">
+                {phases.map((phase) => (
+                  <PhaseSection key={phase.name} phase={phase} />
+                ))}
 
-                  {/* Special Items */}
-                  <SpecialItemsBar items={specialItems} />
-                </div>
+                {/* Special Items */}
+                <SpecialItemsBar items={specialItems} />
               </div>
             </div>
-          </div>
+          </GanttLayout>
         </section>
 
         {/* Footer */}

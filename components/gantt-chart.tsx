@@ -149,8 +149,9 @@ function TaskBar({
 
   return (
     <div className="group relative flex items-center gap-3 py-1.5">
-      <div className="w-56 shrink-0 truncate pr-3 text-right text-xs text-muted-foreground">
-        {task.name}
+      {/* ทำให้ชื่อ Task ติดอยู่ทางซ้าย (Sticky Left) */}
+      <div className="sticky left-0 z-30 flex h-7 w-56 shrink-0 items-center justify-end bg-background pr-3 text-right text-xs text-muted-foreground shadow-[1px_0_0_0_rgba(255,255,255,0.05)]">
+        <span className="truncate">{task.name}</span>
       </div>
       <div className="relative h-7 flex-1" ref={containerRef}>
         <div
@@ -200,9 +201,10 @@ function TaskBar({
 
 function MonthGrid() {
   return (
-    <div className="flex items-center">
-      <div className="w-56 shrink-0" />
-      <div className="relative flex-1">
+    <div className="flex items-stretch">
+      {/* ทำให้ช่องว่างด้านซ้ายสุดติดขอบ (Sticky Top-Left Corner) */}
+      <div className="sticky left-0 z-50 w-56 shrink-0 bg-background/95 backdrop-blur border-r border-border/40 shadow-[1px_0_0_0_rgba(255,255,255,0.05)]" />
+      <div className="relative flex-1 py-2">
         <div className="flex">
           {MONTHS.map((month) => (
             <div
@@ -235,7 +237,8 @@ function MonthGrid() {
 function GridLines() {
   return (
     <div className="pointer-events-none absolute inset-0 flex" aria-hidden>
-      <div className="w-56 shrink-0" />
+      {/* ทำให้เส้น Grid ไม่ทับกับเมนูด้านซ้าย */}
+      <div className="sticky left-0 z-20 w-56 shrink-0 bg-background" />
       <div className="flex flex-1">
         {MONTHS.map((month, i) => (
           <div key={month} className="flex flex-1">
@@ -265,11 +268,11 @@ function CurrentDateLine() {
 
   return (
     <div
-      className="pointer-events-none absolute top-0 bottom-0 z-10"
+      className="pointer-events-none absolute top-0 bottom-0 z-40"
       style={{ left: `calc(14rem + ${position}% * (100% - 14rem) / 100%)` }}
     >
       <div className="absolute top-0 h-full w-px bg-red-500/60" />
-      <div className="absolute -top-1 -translate-x-1/2 rounded-full bg-red-500 px-1.5 py-0.5 text-[9px] font-semibold text-red-50">
+      <div className="sticky top-12 mt-1 w-max -translate-x-1/2 rounded-full bg-red-500 px-1.5 py-0.5 text-[9px] font-semibold text-red-50 shadow-md">
         Today
       </div>
     </div>
@@ -290,10 +293,9 @@ export function PhaseSection({
 
   const handleAddTask = () => {
     if (newTaskName.trim() && onAddTask) {
-      // สร้าง Task ใหม่โดยค่าตั้งต้นความยาวคือ 4 ช่อง (2 เดือน)
       onAddTask(phase.name, {
         name: newTaskName.trim(),
-        type: "development", // กำหนด Default ให้เป็น development ไปก่อน
+        type: "development",
         startCol: 0,
         endCol: 3,
       });
@@ -305,14 +307,17 @@ export function PhaseSection({
   return (
     <div className="relative mb-2">
       <div
-        className={`mb-1 flex items-center gap-2 border-l-2 ${phase.borderColor} ${phase.bgColor} rounded-r-md px-3 py-2`}
+        className={`mb-1 flex items-center border-l-2 ${phase.borderColor} ${phase.bgColor} rounded-r-md`}
       >
-        <h3 className={`text-sm font-bold tracking-wide ${phase.color}`}>
-          {phase.name}
-        </h3>
-        <span className="text-xs text-muted-foreground">
-          {phase.tasks.length} tasks
-        </span>
+        {/* ทำให้ชื่อ Phase ติดซ้ายเสมอ */}
+        <div className="sticky left-0 z-30 flex w-max items-center gap-2 px-3 py-2 backdrop-blur-sm">
+          <h3 className={`text-sm font-bold tracking-wide ${phase.color}`}>
+            {phase.name}
+          </h3>
+          <span className="text-xs text-muted-foreground">
+            {phase.tasks.length} tasks
+          </span>
+        </div>
       </div>
       <div className="relative">
         <GridLines />
@@ -320,9 +325,9 @@ export function PhaseSection({
           <TaskBar key={task.name} task={task} onTaskUpdate={onTaskUpdate} />
         ))}
 
-        {/* --- ส่วนสำหรับการ Add Task ใหม่ใน Phase นี้ --- */}
+        {/* Add Task Row */}
         <div className="group relative flex items-center gap-3 py-1.5">
-          <div className="w-56 shrink-0 pr-3 text-right flex justify-end">
+          <div className="sticky left-0 z-30 flex h-7 w-56 shrink-0 items-center justify-end bg-background pr-3 text-right">
             {isAddingTask ? (
               <input
                 autoFocus
@@ -347,18 +352,8 @@ export function PhaseSection({
                 onClick={() => setIsAddingTask(true)}
                 className="inline-flex items-center gap-1 text-xs text-muted-foreground/40 hover:text-foreground transition-colors"
               >
-                <svg
-                  className="w-3 h-3"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
                 Add Task
               </button>
@@ -372,7 +367,12 @@ export function PhaseSection({
 }
 
 export function TimelineHeader() {
-  return <MonthGrid />;
+  return (
+    // ทำให้ Header ล็อกติดด้านบน (Sticky Top)
+    <div className="sticky top-0 z-50 border-b border-border/40 bg-background/95 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/80">
+      <MonthGrid />
+    </div>
+  );
 }
 
 export function TodayLine() {
@@ -406,7 +406,6 @@ export function Legend() {
   );
 }
 
-// Sub-component สำหรับ Special Item เพื่อให้รองรับ Drag & Drop เช่นกัน
 function SpecialItemRow({
   item,
   onUpdate,
@@ -426,8 +425,9 @@ function SpecialItemRow({
 
   return (
     <div className="group relative flex items-center gap-3 py-1.5">
-      <div className="w-56 shrink-0 truncate pr-3 text-right text-xs text-muted-foreground">
-        {item.name}
+      {/* Sticky Left สำหรับ Special Items */}
+      <div className="sticky left-0 z-30 flex h-7 w-56 shrink-0 items-center justify-end bg-background pr-3 text-right text-xs text-muted-foreground shadow-[1px_0_0_0_rgba(255,255,255,0.05)]">
+        <span className="truncate">{item.name}</span>
       </div>
       <div className="relative h-7 flex-1" ref={containerRef}>
         <div
@@ -474,10 +474,12 @@ export function SpecialItemsBar({
 }) {
   return (
     <div className="relative mt-1 mb-2">
-      <div className="mb-1 flex items-center gap-2 border-l-2 border-rose-500/30 rounded-r-md bg-rose-500/5 px-3 py-2">
-        <h3 className="text-sm font-bold tracking-wide text-rose-400">
-          Special Items
-        </h3>
+      <div className="mb-1 flex items-center border-l-2 border-rose-500/30 rounded-r-md bg-rose-500/5">
+        <div className="sticky left-0 z-30 flex w-max items-center gap-2 px-3 py-2">
+          <h3 className="text-sm font-bold tracking-wide text-rose-400">
+            Special Items
+          </h3>
+        </div>
       </div>
       <div className="relative">
         <GridLines />
@@ -489,7 +491,6 @@ export function SpecialItemsBar({
   );
 }
 
-// --- Component ใหม่สำหรับ Add Phase เพิ่มเติม (นำไปวางในไฟล์หน้าหลักต่อท้าย Loop Phase ได้เลย) ---
 export function AddPhaseButton({
   onAddPhase,
 }: {
@@ -509,49 +510,60 @@ export function AddPhaseButton({
   return (
     <div className="relative mb-6 group">
       {isAdding ? (
-        <div className="mb-1 flex items-center gap-2 border-l-2 border-dashed border-border/50 bg-muted/10 rounded-r-md px-3 py-2">
-          <input
-            autoFocus
-            className="bg-background border border-border rounded px-2 py-1 text-sm font-bold w-48 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-            placeholder="New Phase name..."
-            value={phaseName}
-            onChange={(e) => setPhaseName(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleAdd();
-              if (e.key === "Escape") {
-                setPhaseName("");
-                setIsAdding(false);
-              }
-            }}
-            onBlur={() => {
-              if (phaseName.trim()) handleAdd();
-              else setIsAdding(false);
-            }}
-          />
+        <div className="mb-1 flex items-center border-l-2 border-dashed border-border/50 bg-muted/10 rounded-r-md">
+          <div className="sticky left-0 z-30 px-3 py-2">
+            <input
+              autoFocus
+              className="bg-background border border-border rounded px-2 py-1 text-sm font-bold w-48 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              placeholder="New Phase name..."
+              value={phaseName}
+              onChange={(e) => setPhaseName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleAdd();
+                if (e.key === "Escape") {
+                  setPhaseName("");
+                  setIsAdding(false);
+                }
+              }}
+              onBlur={() => {
+                if (phaseName.trim()) handleAdd();
+                else setIsAdding(false);
+              }}
+            />
+          </div>
         </div>
       ) : (
         <div
           onClick={() => setIsAdding(true)}
-          className="mb-1 flex items-center gap-2 border-l-2 border-dashed border-border/30 bg-muted/5 rounded-r-md px-3 py-2 cursor-pointer hover:bg-muted/20 hover:border-border/60 transition-all"
+          className="mb-1 flex items-center border-l-2 border-dashed border-border/30 bg-muted/5 rounded-r-md cursor-pointer hover:bg-muted/20 hover:border-border/60 transition-all"
         >
-          <h3 className="text-sm font-bold tracking-wide text-muted-foreground group-hover:text-foreground flex items-center gap-2">
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-            Add Phase
-          </h3>
+          <div className="sticky left-0 z-30 px-3 py-2">
+            <h3 className="text-sm font-bold tracking-wide text-muted-foreground group-hover:text-foreground flex items-center gap-2">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Add Phase
+            </h3>
+          </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// -------------------------------------------------------------------------
+// เพิ่ม Component สำหรับครอบ Gantt Chart ทั้งหมด เพื่อบังคับ CSS ให้ Sticky ทำงานได้ถูกต้อง
+// -------------------------------------------------------------------------
+export function GanttLayout({ children }: { children: React.ReactNode }) {
+  return (
+    // กำหนดความสูงแบบจำกัด (เช่น h-[calc(100vh-8rem)] หรือ h-[800px]) และ overflow-auto
+    // จะทำให้ Component ด้านในรับรู้ขอบเขต และ Sticky ทำงานได้ทั้งแนวตั้งและแนวนอน
+    <div className="flex h-[calc(100vh-8rem)] min-h-[600px] w-full flex-col overflow-hidden rounded-xl border border-border bg-background shadow-md">
+      <div className="flex-1 overflow-auto relative scroll-smooth">
+        <div className="min-w-max pb-24">
+          {children}
+        </div>
+      </div>
     </div>
   );
 }
