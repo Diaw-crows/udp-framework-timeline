@@ -72,8 +72,13 @@ export default function DashboardPage() {
             <TimelineHeader />
 
             {/* Chart Body */}
-            <div className="relative">
-              <TodayLine />
+            {/* เพิ่ม min-h-[500px] เพื่อให้ Chart Body มีความสูงพอดี และเส้นลากไปจนสุด */}
+            <div className="relative min-h-[500px]">
+              
+              {/* 🔴 สร้าง Layer z-20 มาครอบ TodayLine เพื่อบังคับให้มันมุดลงไปใต้แถบชื่อ Task (z-30) */}
+              <div className="absolute inset-0 z-20 pointer-events-none">
+                <TodayLine />
+              </div>
 
               {/* Phase Sections */}
               <div className="py-2">
