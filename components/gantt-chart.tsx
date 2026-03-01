@@ -265,12 +265,11 @@ function CurrentDateLine() {
 
   return (
     <div
-      className="pointer-events-none absolute top-0 bottom-0 z-50"
+      className="pointer-events-none absolute top-0 bottom-0 z-10"
       style={{ left: `calc(14rem + ${position}% * (100% - 14rem) / 100%)` }}
     >
       <div className="absolute top-0 h-full w-px bg-red-500/60" />
-      {/* เปลี่ยนจาก absolute เป็น sticky เพื่อให้ป้าย Today เลื่อนตามลงมาตอน Scroll */}
-      <div className="sticky top-2 mt-1 w-max -translate-x-1/2 rounded-full bg-red-500 px-1.5 py-0.5 text-[9px] font-semibold text-red-50 shadow-md">
+      <div className="absolute -top-1 -translate-x-1/2 rounded-full bg-red-500 px-1.5 py-0.5 text-[9px] font-semibold text-red-50">
         Today
       </div>
     </div>
@@ -373,11 +372,7 @@ export function PhaseSection({
 }
 
 export function TimelineHeader() {
-  return (
-    <div className="sticky top-0 z-40 border-b border-border/40 bg-background/95 py-2 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/80">
-      <MonthGrid />
-    </div>
-  );
+  return <MonthGrid />;
 }
 
 export function TodayLine() {
