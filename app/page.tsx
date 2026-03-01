@@ -67,33 +67,23 @@ export default function DashboardPage() {
             <Legend />
           </div>
 
-          {/* ใช้ GanttLayout แทน overflow-x-auto แบบเดิม เพื่อให้ขอบเขต Sticky ล็อกได้ทั้งแกน X และ Y */}
           <GanttLayout>
             <TimelineHeader />
 
-            {/* Chart Body */}
-            {/* เพิ่ม min-h-[500px] เพื่อให้ Chart Body มีความสูงพอดี และเส้นลากไปจนสุด */}
             <div className="relative min-h-[500px]">
-              
-              {/* 🔴 สร้าง Layer z-20 มาครอบ TodayLine เพื่อบังคับให้มันมุดลงไปใต้แถบชื่อ Task (z-30) */}
-              <div className="absolute inset-0 z-20 pointer-events-none">
-                <TodayLine />
-              </div>
+              <TodayLine />
 
-              {/* Phase Sections */}
               <div className="py-2">
                 {phases.map((phase) => (
                   <PhaseSection key={phase.name} phase={phase} />
                 ))}
 
-                {/* Special Items */}
                 <SpecialItemsBar items={specialItems} />
               </div>
             </div>
           </GanttLayout>
         </section>
 
-        {/* Footer */}
         <footer className="mt-6 flex items-center justify-between border-t border-border pt-4 pb-8 text-xs text-muted-foreground">
           <span>UDP Framework - Executive Dashboard</span>
           <span>Confidential - Internal Use Only</span>
