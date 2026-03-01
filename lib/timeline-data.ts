@@ -291,6 +291,63 @@ export const phases: Phase[] = [
       },
     ],
   },
+  ,
+  {
+    name: "ATM",
+    color: "text-amber-400",
+    bgColor: "bg-amber-500/10",
+    borderColor: "border-amber-500/30",
+    tasks: [
+      {
+        name: "Dev - UDP Enhance ATM",
+        type: "development",
+        startCol: 12,
+        endCol: 15,
+        note: "Oat",
+      },
+      {
+        name: "Data Migration - ATM NonProd",
+        type: "migration",
+        startCol: 14,
+        endCol: 16,
+      },
+      {
+        name: "Dev - UDP DE Pipeline (ATM)",
+        type: "development",
+        startCol: 14,
+        endCol: 17,
+        note: "Oat",
+      },
+      { name: "SIT - ATM", type: "testing", startCol: 17, endCol: 19 },
+      {
+        name: "UAT - ATM",
+        type: "testing",
+        startCol: 18,
+        endCol: 20,
+        note: "Need confirm timeline",
+      },
+      {
+        name: "Deploy - UDP Pipeline ATM",
+        type: "deployment",
+        startCol: 21,
+        endCol: 23,
+      },
+      {
+        name: "Data Migration - ATM Prod",
+        type: "migration",
+        startCol: 20,
+        endCol: 22,
+      },
+      { name: "PVT - ATM", type: "testing", startCol: 22, endCol: 23 },
+      {
+        name: "User ATM Onboard",
+        type: "onboarding",
+        startCol: 13,
+        endCol: 23,
+        note: "Tableau User",
+      },
+    ],
+  },
 ];
 
 export const specialItems = [
